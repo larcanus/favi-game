@@ -9,14 +9,14 @@ import {
 	update_canvas,
 	draw_pause,
 	draw_game_over,
-	draw_game_win
+	draw_game_win,
 } from './rendering.js';
 import { create_enemy, create_coins, get_random_xy } from './gameObjects.js';
 import { find_laser_collision, process_laser_hits, reset_damage_timers } from './laserSystem.js';
 import { check_live_objects, update_storage } from './gameLogic.js';
-import { DIFFICULT_PARAM, STATE_APP } from '../common/constans.js';
+import { DIFFICULT_PARAM, STATE_APP, RESTART_BUTTON } from '../common/constans.js';
 
-export class Game {
+class Game {
 	constructor( ctx, canvas, favicon_href ) {
 		this.ctx = ctx;
 		this.canvas = canvas;
@@ -225,6 +225,25 @@ export class Game {
 		update_storage( 'state_app', STATE_APP.PAUSE );
 	}
 
+	restartGame() {
+		this.isGameStop = false;
+		this.isGamePause = false;
+		this.collisionObject = null;
+
+		DIFFICULT_PARAM.DIFFICULT = 4;
+
+		this.enemies = [];
+		this.coins = [];
+		this.health = null;
+
+		this.resetKeys();
+
+		update_canvas( this.ctx, this.canvas );
+		this.initGameObjects();
+
+		this.initIntervals();
+	}
+
 	resetKeys() {
 		this.pressedKeys.left = false;
 		this.pressedKeys.right = false;
@@ -237,10 +256,30 @@ export class Game {
 		clearInterval( this.healthyRespIntervalId );
 	}
 
+	checkRestartButtonClick( x, y ) {
+		return x >= RESTART_BUTTON.x &&
+		       x <= RESTART_BUTTON.x + RESTART_BUTTON.width &&
+		       y >= RESTART_BUTTON.y &&
+		       y <= RESTART_BUTTON.y + RESTART_BUTTON.height;
+	}
+
 	initEventListeners() {
 		window.addEventListener( 'keydown', event => this.handleKeyDown( event ) );
 		window.addEventListener( 'keyup', event => this.handleKeyUp( event ) );
 		window.addEventListener( 'blur', () => this.handleBlur() );
+		this.canvas.addEventListener( 'click', event => this.handleCanvasClick( event ) );
+	}
+
+	handleCanvasClick( event ) {
+		if ( this.isGameStop ) {
+			const rect = this.canvas.getBoundingClientRect();
+			const x = event.clientX - rect.left;
+			const y = event.clientY - rect.top;
+
+			if ( this.checkRestartButtonClick( x, y ) ) {
+				this.restartGame();
+			}
+		}
 	}
 
 	handleKeyDown( event ) {
@@ -287,3 +326,5 @@ export class Game {
 		this.resetKeys();
 	}
 }
+
+export default Game

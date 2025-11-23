@@ -51,6 +51,13 @@ export function draw_game_over( ctx ) {
 		ctx.fillText( 'GAME OVER', 170, 230 );
 		ctx.fill();
 		ctx.closePath();
+
+		ctx.beginPath();
+		ctx.fillStyle = '#FF4444';
+		ctx.font = '25px fantasy';
+		ctx.fillText( 'Retry?', 240, 300 );
+		ctx.fill();
+		ctx.closePath();
 	} );
 }
 

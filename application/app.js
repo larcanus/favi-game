@@ -1,5 +1,5 @@
 import imageDataObjects from './imageData.js';
-import { Game } from './Game.js';
+import Game from './Game.js';
 import { update_storage } from './gameLogic.js';
 import { WINDOW, STATE_APP } from '../common/constans.js';
 

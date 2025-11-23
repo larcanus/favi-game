@@ -20,3 +20,10 @@ export const WINDOW = {
 export const DIFFICULT_PARAM = {
     DIFFICULT : 4,
 };
+
+export const RESTART_BUTTON = {
+    x: 200,
+    y: 280,
+    width: 200,
+    height: 50
+};
