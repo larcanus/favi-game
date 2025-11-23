@@ -1,4 +1,5 @@
 import imageDataObjects from './imageData.js';
+import process_laser_hits from './utils.js';
 import { CANVAS, DIFFICULT_PARAM, WINDOW, STATE_APP } from '../common/constans.js';
 
 window.onbeforeunload = function () {
@@ -387,44 +388,6 @@ function find_laser_collision( enemies, ship ) {
 	}
 
 	return closestY;
-}
-
-// Обрабатывает попадание лазера по объектам
-function process_laser_hits( enemies, ship, laser, laserImpact, damagePerTick ) {
-	const laserX = ship.cox + ship.w / 2;
-	let hitDetected = false;
-	let hitX = 0;
-	let hitY = 0;
-
-	for ( let i = 0; i < enemies.length; i++ ) {
-		const enemy = enemies[ i ];
-		if ( enemy && !enemy.isDead && !enemy.outside ) {
-			const distX = Math.abs( enemy.coxArc - laserX );
-
-			if ( distX <= enemy.r && enemy.coyArc < ship.coy ) {
-				// Лазер попадает в объект
-				enemy.damageTime += damagePerTick;
-
-				// Обновляем позицию эффекта попадания
-				if ( !hitDetected || enemy.coyArc > hitY ) {
-					hitDetected = true;
-					hitX = laserX;
-					hitY = enemy.coyArc + enemy.r;
-				}
-
-				// Если урон достиг 2000мс (2 секунды), уничтожаем объект
-				if ( enemy.damageTime >= 2000 ) {
-					enemy.isDead = true;
-					draw_explosion( enemy.cox, enemy.coy );
-				}
-			}
-		}
-	}
-
-	// Обновляем позицию эффекта попадания
-	if ( hitDetected ) {
-		laserImpact.update_position( hitX, hitY );
-	}
 }
 
 // Сбрасывает счётчики урона у всех объектов
