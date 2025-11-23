@@ -105,13 +105,17 @@ if ( canvas.getContext ) {
 
 	window.addEventListener( 'keydown', event => {
 		if ( !isGameStop && !isGamePause ) {
-			if ( event.key === 'ArrowRight' ) {
+			// Движение вправо: стрелка вправо или физическая клавиша D (работает с любой раскладкой)
+			if ( event.key === 'ArrowRight' || event.code === 'KeyD' ) {
 				update_rect();
 				window.requestAnimationFrame( () => ship.move_right() );
-			} else if ( event.key === 'ArrowLeft' ) {
+			}
+			// Движение влево: стрелка влево или физическая клавиша A (работает с любой раскладкой)
+			else if ( event.key === 'ArrowLeft' || event.code === 'KeyA' ) {
 				update_rect();
 				window.requestAnimationFrame( () => ship.move_left() );
-			} else if ( event.key === 'Escape' ) {
+			}
+			else if ( event.key === 'Escape' ) {
 				window.close();
 			}
 		} else {
@@ -309,29 +313,3 @@ function draw_pause() {
 function update_storage( key, value ) {
 	chrome.storage.local.set( { [ key ] : value } );
 }
-
-
-// function check_collision_rect_one_side( ship, enemies ) {
-// 	const relativCoordShip = [ ship.cox, ship.coy ];
-// 	let coolision = false;
-//
-// 	enemies.forEach( enemy => {
-// 		if ( !enemy.isDead && !enemy.outside ) {
-// 			// const relativCOX = Math.trunc( enemy.cox );
-// 			const relativCOY = Math.trunc( enemy.coy ) + enemy.h;
-//
-// 			for ( let s = ship.cox; s <= ship.cox + ship.w && !coolision; s++ ) {
-// 				for ( let e = enemy.cox; e <= enemy.cox + enemy.w && !coolision; e++ ) {
-// 					if ( ( s === e ) &&
-// 						( relativCOY === relativCoordShip[ 1 ] ||
-// 							relativCOY + 1 === relativCoordShip[ 1 ] ||
-// 							relativCOY + 2 === relativCoordShip[ 1 ] ) ) {
-// 						enemy.isDead = true;
-// 						coolision = true;
-// 					}
-// 				}
-// 			}
-// 		}
-// 	} );
-// 	return coolision;
-// }
