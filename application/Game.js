@@ -253,7 +253,7 @@ export class Game {
 			else if ( event.key === 'ArrowLeft' || event.code === 'KeyA' ) {
 				this.pressedKeys.left = true;
 			}
-			else if ( event.key === 'Control' || event.code === 'ControlLeft' || event.code === 'ControlRight' ) {
+			else if ( event.key === 'ArrowUp' || event.code === 'KeyW' ) {
 				this.pressedKeys.shoot = true;
 			}
 		}
@@ -274,7 +274,7 @@ export class Game {
 		else if ( event.key === 'ArrowLeft' || event.code === 'KeyA' ) {
 			this.pressedKeys.left = false;
 		}
-		else if ( event.key === 'Control' || event.code === 'ControlLeft' || event.code === 'ControlRight' ) {
+		else if ( event.key === 'ArrowUp' || event.code === 'KeyW' ) {
 			this.pressedKeys.shoot = false;
 		}
 	}
