@@ -107,13 +107,11 @@ if ( canvas.getContext ) {
 		if ( !isGameStop && !isGamePause ) {
 			// Движение вправо: стрелка вправо или физическая клавиша D (работает с любой раскладкой)
 			if ( event.key === 'ArrowRight' || event.code === 'KeyD' ) {
-				update_rect();
-				window.requestAnimationFrame( () => ship.move_right() );
+				ship.move_right();
 			}
 			// Движение влево: стрелка влево или физическая клавиша A (работает с любой раскладкой)
 			else if ( event.key === 'ArrowLeft' || event.code === 'KeyA' ) {
-				update_rect();
-				window.requestAnimationFrame( () => ship.move_left() );
+				ship.move_left();
 			}
 			else if ( event.key === 'Escape' ) {
 				window.close();
