@@ -1,0 +1,62 @@
+/* GENERAL STYLES */
+body.noStart {
+    text-align: center;
+    background: black;
+    width: 200px;
+    height: 100px;
+}
+body.start {
+    text-align: center;
+    background: black;
+    width: 700px;
+    height: 700px;
+}
+.question{
+    margin-top: 15px;
+}
+
+p {
+    color: #ddd;
+    font-family: Helvetica;
+    font-size: 20px;
+    margin: 5px 0 0 0;
+}
+
+a {
+    color: #000;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: Helvetica;
+    font-size: 20px;
+}
+
+/* HIGHLIGHT button */
+.highlight .button {
+    display: inline-block;
+    color: #fff;
+    background: #158b00;
+    margin: 20px;
+    width: 130px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.highlight .button:before {
+    content: "";
+    position: absolute;
+    top: -30px;
+    left: -80px;
+    height: 100px;
+    width: 70px;
+    background: rgba(255, 255, 255, .7);
+    transform: rotate(20deg);
+}
+
+.highlight .button:hover:before {
+    left: 150px;
+    transition: all .5s;
+}
+.highlight {margin-bottom:100px;}
