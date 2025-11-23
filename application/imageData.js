@@ -18,7 +18,7 @@ const imageDataObjects = {
 				this.sh = 140;
 				this.dw = 130;
 				this.dh = 130;
-				this.dx = 5;
+				this.dx = 1;
 				this.dy = 1;
 				this.isDead = false;
 			}

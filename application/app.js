@@ -15,6 +15,11 @@ let collisionObject = null;
 let isGameStop = false;
 let isGamePause = false;
 
+const pressedKeys = {
+	left: false,
+	right: false
+};
+
 const canvas = document.querySelector( 'canvas' );
 if ( canvas.getContext ) {
 	var ctx = canvas.getContext( '2d' );
@@ -88,6 +93,15 @@ if ( canvas.getContext ) {
 		}
 
 		if ( !isGamePause ) {
+			if ( !isGameStop ) {
+				if ( pressedKeys.right ) {
+					ship.move_right();
+				}
+				if ( pressedKeys.left ) {
+					ship.move_left();
+				}
+			}
+
 			update_rect();
 
 			window.requestAnimationFrame( () => {
@@ -104,14 +118,14 @@ if ( canvas.getContext ) {
 	}, 10 );
 
 	window.addEventListener( 'keydown', event => {
+		if ( event.repeat ) return;
+
 		if ( !isGameStop && !isGamePause ) {
-			// Движение вправо: стрелка вправо или физическая клавиша D (работает с любой раскладкой)
 			if ( event.key === 'ArrowRight' || event.code === 'KeyD' ) {
-				ship.move_right();
+				pressedKeys.right = true;
 			}
-			// Движение влево: стрелка влево или физическая клавиша A (работает с любой раскладкой)
 			else if ( event.key === 'ArrowLeft' || event.code === 'KeyA' ) {
-				ship.move_left();
+				pressedKeys.left = true;
 			}
 			else if ( event.key === 'Escape' ) {
 				window.close();
@@ -127,11 +141,22 @@ if ( canvas.getContext ) {
 		}
 	} );
 
+	window.addEventListener( 'keyup', event => {
+		if ( event.key === 'ArrowRight' || event.code === 'KeyD' ) {
+			pressedKeys.right = false;
+		}
+		else if ( event.key === 'ArrowLeft' || event.code === 'KeyA' ) {
+			pressedKeys.left = false;
+		}
+	} );
+
 	window.addEventListener( 'blur', () => {
 		if ( !isGamePause && !isGameStop ) {
 			isGamePause = true;
 			draw_pause();
 		}
+		pressedKeys.left = false;
+		pressedKeys.right = false;
 	} );
 
 	window.addEventListener( 'resize', () => {
@@ -143,6 +168,8 @@ if ( canvas.getContext ) {
 		if ( !isGameStop ) {
 			isGameStop = true;
 			ship.isDead = true
+			pressedKeys.left = false;
+			pressedKeys.right = false;
 			update_rect();
 			clearInterval( enemyRespIntervalId );
 			clearInterval( highDiffIntervalId );
@@ -159,6 +186,10 @@ if ( canvas.getContext ) {
 
 	const pause_game = () => {
 		isGamePause = !isGamePause;
+		if ( isGamePause ) {
+			pressedKeys.left = false;
+			pressedKeys.right = false;
+		}
 		draw_pause();
 	}
 } )();
