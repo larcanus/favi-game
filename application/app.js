@@ -35,12 +35,13 @@ if ( canvas.getContext ) {
 ( async function start_game() {
 	const { favicon : favicon_href } = await chrome.storage.local.get( 'favicon' );
 
-	const { get_back_ground, get_ship, get_health_count, get_health_arc, get_score_count, get_laser } = imageDataObjects;
+	const { get_back_ground, get_ship, get_health_count, get_health_arc, get_score_count, get_laser, get_laser_impact } = imageDataObjects;
 	const healthCount = get_health_count();
 	const ship = get_ship();
 	const backGround = get_back_ground();
 	const scoreCount = get_score_count();
 	const laser = get_laser( ship );
+	const laserImpact = get_laser_impact();
 
 	backGround.draw_back_ground()
 	healthCount.draw_health_count();
@@ -103,13 +104,14 @@ if ( canvas.getContext ) {
 				laser.activate();
 			} else if ( !pressedKeys.shoot && laser.isActive ) {
 				laser.deactivate();
+				laserImpact.reset();
 				// Сброс урона у всех объектов
 				reset_damage_timers( enemies );
 			}
 
 			// Проверка попадания лазера по объектам
 			if ( laser.isActive ) {
-				process_laser_hits( enemies, ship, laser, 10 );
+				process_laser_hits( enemies, ship, laser, laserImpact, 10 );
 			}
 		}
 
@@ -133,6 +135,11 @@ if ( canvas.getContext ) {
 					if ( laser.isActive ) {
 						const laserEndY = find_laser_collision( enemies, ship );
 						laser.draw_laser( laserEndY );
+
+						// Рисуем эффект попадания
+						if ( laserEndY > 0 ) {
+							laserImpact.draw_impact();
+						}
 					}
 
 					draw_enemies( enemies );
@@ -364,16 +371,14 @@ function collision_arc_rect( enemy, ship ) {
 // Находит Y-координату, где лазер встречает препятствие
 function find_laser_collision( enemies, ship ) {
 	const laserX = ship.cox + ship.w / 2;
-	let closestY = 0; // По умолчанию лазер идёт до верха экрана
+	let closestY = 0;
 
 	for ( let i = 0; i < enemies.length; i++ ) {
 		const enemy = enemies[ i ];
 		if ( enemy && !enemy.isDead && !enemy.outside ) {
-			// Проверяем, попадает ли лазер в горизонтальные границы объекта
 			const distX = Math.abs( enemy.coxArc - laserX );
 
 			if ( distX <= enemy.r ) {
-				// Лазер пересекает объект по X, проверяем Y
 				if ( enemy.coyArc < ship.coy && enemy.coyArc > closestY ) {
 					closestY = enemy.coyArc + enemy.r;
 				}
@@ -385,8 +390,11 @@ function find_laser_collision( enemies, ship ) {
 }
 
 // Обрабатывает попадание лазера по объектам
-function process_laser_hits( enemies, ship, laser, damagePerTick ) {
+function process_laser_hits( enemies, ship, laser, laserImpact, damagePerTick ) {
 	const laserX = ship.cox + ship.w / 2;
+	let hitDetected = false;
+	let hitX = 0;
+	let hitY = 0;
 
 	for ( let i = 0; i < enemies.length; i++ ) {
 		const enemy = enemies[ i ];
@@ -397,6 +405,13 @@ function process_laser_hits( enemies, ship, laser, damagePerTick ) {
 				// Лазер попадает в объект
 				enemy.damageTime += damagePerTick;
 
+				// Обновляем позицию эффекта попадания
+				if ( !hitDetected || enemy.coyArc > hitY ) {
+					hitDetected = true;
+					hitX = laserX;
+					hitY = enemy.coyArc + enemy.r;
+				}
+
 				// Если урон достиг 2000мс (2 секунды), уничтожаем объект
 				if ( enemy.damageTime >= 2000 ) {
 					enemy.isDead = true;
@@ -404,6 +419,11 @@ function process_laser_hits( enemies, ship, laser, damagePerTick ) {
 				}
 			}
 		}
+	}
+
+	// Обновляем позицию эффекта попадания
+	if ( hitDetected ) {
+		laserImpact.update_position( hitX, hitY );
 	}
 }
 

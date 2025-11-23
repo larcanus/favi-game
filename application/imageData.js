@@ -112,6 +112,108 @@ const imageDataObjects = {
 		return new Laser( imageDataObjects.ctx, ship );
 	},
 
+	get_laser_impact() {
+		class LaserImpact {
+			constructor( ctx ) {
+				this.ctx = ctx;
+				this.x = 0;
+				this.y = 0;
+				this.frame = 0;
+				this.maxFrame = 8;
+				this.particles = [];
+			}
+
+			update_position( x, y ) {
+				this.x = x;
+				this.y = y;
+				this.frame++;
+
+				// Создаём новые частицы
+				if ( this.frame % 2 === 0 ) {
+					for ( let i = 0; i < 3; i++ ) {
+						this.particles.push( {
+							x: x + ( Math.random() - 0.5 ) * 20,
+							y: y + ( Math.random() - 0.5 ) * 20,
+							vx: ( Math.random() - 0.5 ) * 4,
+							vy: ( Math.random() - 0.5 ) * 4,
+							life: 20,
+							size: Math.random() * 3 + 2
+						} );
+					}
+				}
+
+				// Обновляем и удаляем старые частицы
+				this.particles = this.particles.filter( p => {
+					p.x += p.vx;
+					p.y += p.vy;
+					p.life--;
+					p.size *= 0.95;
+					return p.life > 0;
+				} );
+
+				if ( this.frame >= this.maxFrame ) {
+					this.frame = 0;
+				}
+			}
+
+			draw_impact() {
+				if ( !this.x || !this.y ) return;
+
+				this.ctx.save();
+
+				// Центральная вспышка
+				const pulseSize = 15 + Math.sin( this.frame * 0.5 ) * 5;
+
+				// Внешнее свечение
+				const gradient = this.ctx.createRadialGradient( this.x, this.y, 0, this.x, this.y, pulseSize );
+				gradient.addColorStop( 0, 'rgba(255, 255, 255, 0.8)' );
+				gradient.addColorStop( 0.3, 'rgba(0, 191, 255, 0.6)' );
+				gradient.addColorStop( 0.6, 'rgba(255, 165, 0, 0.3)' );
+				gradient.addColorStop( 1, 'rgba(255, 0, 0, 0)' );
+
+				this.ctx.fillStyle = gradient;
+				this.ctx.beginPath();
+				this.ctx.arc( this.x, this.y, pulseSize, 0, Math.PI * 2 );
+				this.ctx.fill();
+
+				// Яркий центр
+				this.ctx.fillStyle = '#FFFFFF';
+				this.ctx.beginPath();
+				this.ctx.arc( this.x, this.y, 5, 0, Math.PI * 2 );
+				this.ctx.fill();
+
+				// Рисуем частицы
+				this.particles.forEach( p => {
+					const alpha = p.life / 20;
+					this.ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, ${alpha})`;
+					this.ctx.beginPath();
+					this.ctx.arc( p.x, p.y, p.size, 0, Math.PI * 2 );
+					this.ctx.fill();
+				} );
+
+				// Кольца ударной волны
+				const ringSize = ( this.frame / this.maxFrame ) * 25;
+				const ringAlpha = 1 - ( this.frame / this.maxFrame );
+				this.ctx.strokeStyle = `rgba(0, 191, 255, ${ringAlpha * 0.6})`;
+				this.ctx.lineWidth = 2;
+				this.ctx.beginPath();
+				this.ctx.arc( this.x, this.y, ringSize, 0, Math.PI * 2 );
+				this.ctx.stroke();
+
+				this.ctx.restore();
+			}
+
+			reset() {
+				this.x = 0;
+				this.y = 0;
+				this.frame = 0;
+				this.particles = [];
+			}
+		}
+
+		return new LaserImpact( imageDataObjects.ctx );
+	},
+
 	get_enemy_rect( cox, coy ) {
 		class Enemy {
 			constructor( ctx, cox, coy ) {
