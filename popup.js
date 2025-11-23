@@ -1,26 +1,26 @@
-import { STATE_APP } from '/storage/constans.js';
+import { STATE_APP } from '/common/constans.js';
 
 window.onload = async function () {
 	await init_popup.onload();
 };
 
 const init_popup = {
-	
+
 	state_app : STATE_APP.STARTING,
-	
+
 	async onload() {
 		init_popup.start_button = document.getElementById( 'start' );
 		init_popup.score_question = document.getElementById( 'score_question' );
-		
+
 		init_popup.addListener();
 		await init_popup.generate_score_points();
 		await init_popup.set_state_in_button();
 	},
-	
+
 	addListener() {
 		init_popup.start_button.addEventListener( 'click', init_popup.start_app );
 	},
-	
+
 	async set_state_in_button() {
 		await init_popup.get_storage_data( 'state_app' ).then( data => {
 			let state;
@@ -37,12 +37,12 @@ const init_popup = {
 				default :
 					state = STATE_APP.STARTING
 			}
-			
+
 			init_popup.state_app = state;
 			init_popup.start_button.innerHTML = state;
 		} );
 	},
-	
+
 	async generate_score_points() {
 		const isOpenApp = await init_popup.check_open_window();
 		let numberPoints;
@@ -59,11 +59,11 @@ const init_popup = {
 		}
 		init_popup.score_question.innerHTML = `${ numberPoints }`;
 	},
-	
+
 	async start_app() {
 		const isOpenApp = await init_popup.check_open_window();
 		await init_popup.get_favicon();
-		
+
 		// если окно не открыто или не крашнулось, можно открыть новое
 		if ( !isOpenApp ) {
 			chrome.runtime.sendMessage( 'starting', response => {
@@ -75,27 +75,27 @@ const init_popup = {
 			window.close();
 		}
 	},
-	
+
 	async check_open_window() {
 		let openWindows = await chrome.windows.getAll();
 		let isOpenApp = false;
 		let windowID = null;
-		
+
 		await init_popup.get_storage_data( 'window_app_id' ).then( data => {
 			windowID = data[ 'window_app_id' ];
 		} );
-		
+
 		openWindows.forEach( win => {
 			if ( win.type === 'popup' && win.id === windowID ) {
 				isOpenApp = true;
 			}
 		} );
-		
+
 		return isOpenApp;
 	},
-	
+
 	/**
-	 * Получить значение из storage по ключу
+	 * Получить значение из common по ключу
 	 * @param {string} key
 	 * @return {Promise}
 	 */
@@ -110,18 +110,18 @@ const init_popup = {
 			}
 		} );
 	},
-	
+
 	/**
 	 * Получить ссылку на favicon
 	 */
 	async get_favicon() {
 		let [ tab ] = await chrome.tabs.query( { active : true, currentWindow : true } );
-		
+
 		chrome.scripting.executeScript( {
 			target : { tabId : tab.id },
 			function : parse_favicon,
 		} );
-		
+
 		function parse_favicon() {
 			const faviconLinks = window.document.querySelectorAll( `link` );
 			let href = null;
@@ -131,7 +131,7 @@ const init_popup = {
 					href = link.href;
 				}
 			} );
-			
+
 			href = href ? href : `/images/google_favicon.png`;
 			chrome.storage.local.set( { [ 'favicon' ] : href } );
 		}

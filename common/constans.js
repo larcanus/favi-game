@@ -17,6 +17,6 @@ export const WINDOW = {
     HEIGHT : 513,
 }
 
-export const DIFFICAL_PARAM = {
-    DIFFICAL : 4,
+export const DIFFICULT_PARAM = {
+    DIFFICULT : 4,
 };
