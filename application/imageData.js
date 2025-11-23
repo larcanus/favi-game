@@ -128,10 +128,7 @@ const imageDataObjects = {
 		class Score_count {
 			constructor( ctx ) {
 				this.ctx = ctx;
-				this.cox = 410;
 				this.coy = 5;
-				this.w = 25;
-				this.h = 25;
 				this.count = 0;
 			}
 
@@ -139,8 +136,12 @@ const imageDataObjects = {
 				this.ctx.beginPath();
 				this.ctx.fillStyle = '#1389FE';
 				this.ctx.font = '23px fantasy';
-				this.ctx.fillText( 'score :', this.cox, this.coy + 21 );
-				this.ctx.fillText( this.count, this.cox + 70, this.coy + 22 );
+
+				const fullText = `score : ${this.count}`;
+				const textWidth = this.ctx.measureText( fullText ).width;
+				const cox = CANVAS.WIDTH - textWidth - 10;
+
+				this.ctx.fillText( fullText, cox, this.coy + 21 );
 				this.ctx.fill();
 				this.ctx.closePath();
 			}
