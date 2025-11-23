@@ -67,7 +67,7 @@ if ( canvas.getContext ) {
 
 	const highDiffIntervalId = setInterval( () => {
 		DIFFICULT_PARAM.DIFFICULT += 1;
-	}, 10000 );
+	}, 20000 );
 
 	const mainIntervalId = setInterval( () => {
 		if ( !isGameStop ) {
