@@ -77,11 +77,9 @@ const imageDataObjects = {
 
 				this.ctx.save();
 
-				// Внешнее свечение
 				this.ctx.shadowBlur = 20;
 				this.ctx.shadowColor = this.glowColor;
 
-				// Основной луч
 				this.ctx.beginPath();
 				this.ctx.strokeStyle = this.color;
 				this.ctx.lineWidth = this.width;
@@ -89,7 +87,6 @@ const imageDataObjects = {
 				this.ctx.lineTo( startX, endY );
 				this.ctx.stroke();
 
-				// Внутренний яркий луч
 				this.ctx.beginPath();
 				this.ctx.strokeStyle = '#FFFFFF';
 				this.ctx.lineWidth = this.width / 2;
@@ -128,7 +125,6 @@ const imageDataObjects = {
 				this.y = y;
 				this.frame++;
 
-				// Создаём новые частицы
 				if ( this.frame % 2 === 0 ) {
 					for ( let i = 0; i < 3; i++ ) {
 						this.particles.push( {
@@ -142,7 +138,6 @@ const imageDataObjects = {
 					}
 				}
 
-				// Обновляем и удаляем старые частицы
 				this.particles = this.particles.filter( p => {
 					p.x += p.vx;
 					p.y += p.vy;
@@ -161,10 +156,8 @@ const imageDataObjects = {
 
 				this.ctx.save();
 
-				// Центральная вспышка
 				const pulseSize = 15 + Math.sin( this.frame * 0.5 ) * 5;
 
-				// Внешнее свечение
 				const gradient = this.ctx.createRadialGradient( this.x, this.y, 0, this.x, this.y, pulseSize );
 				gradient.addColorStop( 0, 'rgba(255, 255, 255, 0.8)' );
 				gradient.addColorStop( 0.3, 'rgba(0, 191, 255, 0.6)' );
@@ -176,13 +169,11 @@ const imageDataObjects = {
 				this.ctx.arc( this.x, this.y, pulseSize, 0, Math.PI * 2 );
 				this.ctx.fill();
 
-				// Яркий центр
 				this.ctx.fillStyle = '#FFFFFF';
 				this.ctx.beginPath();
 				this.ctx.arc( this.x, this.y, 5, 0, Math.PI * 2 );
 				this.ctx.fill();
 
-				// Рисуем частицы
 				this.particles.forEach( p => {
 					const alpha = p.life / 20;
 					this.ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, ${alpha})`;
@@ -191,7 +182,6 @@ const imageDataObjects = {
 					this.ctx.fill();
 				} );
 
-				// Кольца ударной волны
 				const ringSize = ( this.frame / this.maxFrame ) * 25;
 				const ringAlpha = 1 - ( this.frame / this.maxFrame );
 				this.ctx.strokeStyle = `rgba(0, 191, 255, ${ringAlpha * 0.6})`;
@@ -357,14 +347,11 @@ const imageDataObjects = {
 			draw_meteor() {
 				if ( this.coy > -20 && this.coy < 800 && !this.isDead ) {
 					this.ctx.beginPath();
-					// рисование круглой фигуры
+
 					this.ctx.arc( this.coxArc, this.coyArc, this.r, 0, Math.PI * 2, true );
-					// this.ctx.fillStyle = '#e30a3d'; // todo убрать в проде
-					// this.ctx.fill();
-					// добавление картинки в canvas
+
 					this.ctx.drawImage( this.image, 0, 0, this.sh, this.sw, this.cox, this.coy, this.dh, this.dw );
 
-					// Индикатор урона
 					if ( this.damageTime > 0 ) {
 						const damagePercent = this.damageTime / 2000;
 						this.ctx.strokeStyle = '#FF0000';
@@ -414,9 +401,7 @@ const imageDataObjects = {
 			draw_health() {
 				if ( this.coy > -20 && this.coy < 800 && !this.isDead ) {
 					this.ctx.beginPath();
-					// рисование круглой фигуры
 					this.ctx.arc( this.coxArc, this.coyArc, this.r, 0, Math.PI * 2, true );
-					// добавление картинки в canvas
 					this.ctx.drawImage( this.image, 0, 0, this.sh, this.sw, this.cox, this.coy, this.dh, this.dw );
 					this.ctx.closePath();
 					this.outside = false;
@@ -687,11 +672,6 @@ const imageDataObjects = {
 			draw_coin() {
 				if ( this.coy > -20 && this.coy < 800 && !this.isDead && this.image_ready ) {
 					this.ctx.beginPath();
-
-					// рисование круглой фигуры для проверки границ
-					// this.ctx.arc( this.coxArc, this.coyArc, this.r, 0, Math.PI * 2, true );
-					// this.ctx.fillStyle = '#e30a3d';
-					// this.ctx.fill();
 
 					this.ctx.drawImage( this.image, 0, 0, this.sh, this.sw, this.cox, this.coy, this.dh, this.dw );
 					this.ctx.closePath();

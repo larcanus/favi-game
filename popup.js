@@ -145,7 +145,6 @@ const init_popup = {
 	 * @return {boolean}
 	 */
 	is_restricted_page(url) {
-		// Служебные протоколы Chrome
 		const restrictedProtocols = [
 			'chrome://',
 			'chrome-extension://',
@@ -157,7 +156,6 @@ const init_popup = {
 			'javascript:'
 		];
 
-		// Защищенные домены (Chrome Web Store и служебные страницы Google)
 		const restrictedDomains = [
 			'chromewebstore.google.com',
 			'chrome.google.com/webstore',
@@ -165,12 +163,10 @@ const init_popup = {
 			'myaccount.google.com'
 		];
 
-		// Проверка протоколов
 		const hasRestrictedProtocol = restrictedProtocols.some(protocol =>
 			url.startsWith(protocol)
 		);
 
-		// Проверка доменов
 		const hasRestrictedDomain = restrictedDomains.some(domain =>
 			url.includes(domain)
 		);
@@ -193,14 +189,13 @@ const init_popup = {
 				return;
 			}
 
-			// Проверка на защищенные страницы
 			if (init_popup.is_restricted_page(tab.url)) {
 				console.log(`Защищенная страница (${tab.url}), используется favicon по умолчанию`);
 				chrome.storage.local.set( { 'favicon' : DEFAULT_FAVICON } );
 				return;
 			}
 
-			// Метод 1: Парсинг DOM страницы (основной метод)
+			// parse DOM
 			try {
 				const results = await chrome.scripting.executeScript({
 					target: { tabId: tab.id },
@@ -210,7 +205,6 @@ const init_popup = {
 				if (results && results[0] && results[0].result) {
 					const faviconHref = results[0].result;
 
-					// Проверяем, что изображение загружается
 					const isValid = await init_popup.check_image_loads(faviconHref);
 					if (isValid) {
 						console.log('Favicon получен через парсинг DOM:', faviconHref);
@@ -222,12 +216,11 @@ const init_popup = {
 				console.log('Не удалось выполнить скрипт парсинга:', scriptError);
 			}
 
-			// Метод 2: Стандартный путь к favicon
+			// path to favicon
 			try {
 				const pageUrl = new URL(tab.url);
 				const standardFavicon = `${pageUrl.origin}/favicon.ico`;
 
-				// Проверяем загрузку через Image
 				const isValid = await init_popup.check_image_loads(standardFavicon);
 				if (isValid) {
 					console.log('Использован стандартный путь favicon:', standardFavicon);
@@ -242,7 +235,7 @@ const init_popup = {
 			console.log('Ошибка при получении favicon:', error);
 		}
 
-		// Fallback: используем иконку расширения по умолчанию
+		// Fallback
 		console.log('Используется favicon по умолчанию');
 		chrome.storage.local.set( { 'favicon' : DEFAULT_FAVICON } );
 
@@ -250,7 +243,6 @@ const init_popup = {
 		 * Улучшенная функция парсинга favicon на странице
 		 */
 		function parse_favicon_improved() {
-			// Приоритетный порядок поиска
 			const selectors = [
 				'link[rel="icon"]',
 				'link[rel="shortcut icon"]',
@@ -258,7 +250,6 @@ const init_popup = {
 				'link[rel="apple-touch-icon-precomposed"]',
 			];
 
-			// Поиск по селекторам
 			for (const selector of selectors) {
 				const links = document.querySelectorAll(selector);
 				for (const link of links) {
@@ -268,7 +259,7 @@ const init_popup = {
 				}
 			}
 
-			// Поиск любых link с href содержащим favicon
+			// any link с href with favicon
 			const allLinks = document.querySelectorAll('link[href*="favicon"]');
 			for (const link of allLinks) {
 				if (link.href && link.href.startsWith('http')) {
@@ -276,7 +267,6 @@ const init_popup = {
 				}
 			}
 
-			// Поиск по расширениям файлов
 			const imageExtensions = ['.ico', '.png', '.svg', '.jpg', '.jpeg', '.gif'];
 			const allLinkElements = document.querySelectorAll('link[href]');
 			for (const link of allLinkElements) {
