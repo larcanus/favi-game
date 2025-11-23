@@ -57,6 +57,61 @@ const imageDataObjects = {
 		return new Ship( imageDataObjects.ctx );
 	},
 
+	get_laser( ship ) {
+		class Laser {
+			constructor( ctx, ship ) {
+				this.ctx = ctx;
+				this.ship = ship;
+				this.isActive = false;
+				this.width = 8;
+				this.color = '#00BFFF';
+				this.glowColor = '#4DD0FF';
+			}
+
+			draw_laser( targetY = 0 ) {
+				if ( !this.isActive || this.ship.isDead ) return;
+
+				const startX = this.ship.cox - 3 + this.ship.w / 2;
+				const startY = this.ship.coy;
+				const endY = targetY;
+
+				this.ctx.save();
+
+				// Внешнее свечение
+				this.ctx.shadowBlur = 20;
+				this.ctx.shadowColor = this.glowColor;
+
+				// Основной луч
+				this.ctx.beginPath();
+				this.ctx.strokeStyle = this.color;
+				this.ctx.lineWidth = this.width;
+				this.ctx.moveTo( startX, startY );
+				this.ctx.lineTo( startX, endY );
+				this.ctx.stroke();
+
+				// Внутренний яркий луч
+				this.ctx.beginPath();
+				this.ctx.strokeStyle = '#FFFFFF';
+				this.ctx.lineWidth = this.width / 2;
+				this.ctx.moveTo( startX, startY );
+				this.ctx.lineTo( startX, endY );
+				this.ctx.stroke();
+
+				this.ctx.restore();
+			}
+
+			activate() {
+				this.isActive = true;
+			}
+
+			deactivate() {
+				this.isActive = false;
+			}
+		}
+
+		return new Laser( imageDataObjects.ctx, ship );
+	},
+
 	get_enemy_rect( cox, coy ) {
 		class Enemy {
 			constructor( ctx, cox, coy ) {
@@ -194,6 +249,7 @@ const imageDataObjects = {
 				this.r = 25;
 				this.isDead = false;
 				this.outside = false;
+				this.damageTime = 0;
 			}
 
 			draw_meteor() {
@@ -205,6 +261,17 @@ const imageDataObjects = {
 					// this.ctx.fill();
 					// добавление картинки в canvas
 					this.ctx.drawImage( this.image, 0, 0, this.sh, this.sw, this.cox, this.coy, this.dh, this.dw );
+
+					// Индикатор урона
+					if ( this.damageTime > 0 ) {
+						const damagePercent = this.damageTime / 2000;
+						this.ctx.strokeStyle = '#FF0000';
+						this.ctx.lineWidth = 3;
+						this.ctx.beginPath();
+						this.ctx.arc( this.coxArc, this.coyArc, this.r + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * damagePercent, false );
+						this.ctx.stroke();
+					}
+
 					this.ctx.closePath();
 					this.outside = false;
 				}
@@ -479,6 +546,7 @@ const imageDataObjects = {
 				this.r = 25;
 				this.isDead = false;
 				this.outside = false;
+				this.damageTime = 0;
 			}
 
 			fix_size() {

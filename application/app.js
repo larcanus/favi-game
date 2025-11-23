@@ -17,14 +17,15 @@ let isGamePause = false;
 
 const pressedKeys = {
 	left: false,
-	right: false
+	right: false,
+	shoot: false
 };
 
 const canvas = document.querySelector( 'canvas' );
 if ( canvas.getContext ) {
 	var ctx = canvas.getContext( '2d' );
 	imageDataObjects.ctx = ctx;
-	ctx.fillStyle = '#000'; // устанавливаем цвет заливки в черный
+	ctx.fillStyle = '#000';
 	ctx.fillRect( 0, 0, canvas.width, canvas.height );
 } else {
 	console.warn( 'canvas dont have context or error' );
@@ -34,11 +35,12 @@ if ( canvas.getContext ) {
 ( async function start_game() {
 	const { favicon : favicon_href } = await chrome.storage.local.get( 'favicon' );
 
-	const { get_back_ground, get_ship, get_health_count, get_health_arc, get_score_count } = imageDataObjects;
+	const { get_back_ground, get_ship, get_health_count, get_health_arc, get_score_count, get_laser } = imageDataObjects;
 	const healthCount = get_health_count();
 	const ship = get_ship();
 	const backGround = get_back_ground();
 	const scoreCount = get_score_count();
+	const laser = get_laser( ship );
 
 	backGround.draw_back_ground()
 	healthCount.draw_health_count();
@@ -95,6 +97,20 @@ if ( canvas.getContext ) {
 				healthCount.count++;
 				draw_healing( ship );
 			}
+
+			// Обработка лазера
+			if ( pressedKeys.shoot && !laser.isActive ) {
+				laser.activate();
+			} else if ( !pressedKeys.shoot && laser.isActive ) {
+				laser.deactivate();
+				// Сброс урона у всех объектов
+				reset_damage_timers( enemies );
+			}
+
+			// Проверка попадания лазера по объектам
+			if ( laser.isActive ) {
+				process_laser_hits( enemies, ship, laser, 10 );
+			}
 		}
 
 		if ( !isGamePause ) {
@@ -112,6 +128,13 @@ if ( canvas.getContext ) {
 			window.requestAnimationFrame( () => {
 					backGround.draw_back_ground()
 					ship.drow_ship();
+
+					// Рисуем лазер перед объектами
+					if ( laser.isActive ) {
+						const laserEndY = find_laser_collision( enemies, ship );
+						laser.draw_laser( laserEndY );
+					}
+
 					draw_enemies( enemies );
 					draw_coins( coins );
 					healthCount.draw_health_count();
@@ -131,6 +154,9 @@ if ( canvas.getContext ) {
 			}
 			else if ( event.key === 'ArrowLeft' || event.code === 'KeyA' ) {
 				pressedKeys.left = true;
+			}
+			else if ( event.key === 'Control' || event.code === 'ControlLeft' || event.code === 'ControlRight' ) {
+				pressedKeys.shoot = true;
 			}
 			else if ( event.key === 'Escape' ) {
 				window.close();
@@ -153,6 +179,9 @@ if ( canvas.getContext ) {
 		else if ( event.key === 'ArrowLeft' || event.code === 'KeyA' ) {
 			pressedKeys.left = false;
 		}
+		else if ( event.key === 'Control' || event.code === 'ControlLeft' || event.code === 'ControlRight' ) {
+			pressedKeys.shoot = false;
+		}
 	} );
 
 	window.addEventListener( 'blur', () => {
@@ -162,6 +191,7 @@ if ( canvas.getContext ) {
 		}
 		pressedKeys.left = false;
 		pressedKeys.right = false;
+		pressedKeys.shoot = false;
 	} );
 
 	window.addEventListener( 'resize', () => {
@@ -175,6 +205,7 @@ if ( canvas.getContext ) {
 			ship.isDead = true
 			pressedKeys.left = false;
 			pressedKeys.right = false;
+			pressedKeys.shoot = false;
 			update_rect();
 			clearInterval( enemyRespIntervalId );
 			clearInterval( highDiffIntervalId );
@@ -194,6 +225,7 @@ if ( canvas.getContext ) {
 			isGameStop = true;
 			pressedKeys.left = false;
 			pressedKeys.right = false;
+			pressedKeys.shoot = false;
 			update_rect();
 			clearInterval( enemyRespIntervalId );
 			clearInterval( highDiffIntervalId );
@@ -211,6 +243,7 @@ if ( canvas.getContext ) {
 		if ( isGamePause ) {
 			pressedKeys.left = false;
 			pressedKeys.right = false;
+			pressedKeys.shoot = false;
 		}
 		draw_pause();
 	}
@@ -328,8 +361,63 @@ function collision_arc_rect( enemy, ship ) {
 	return ( dx * dx + dy * dy <= ( enemy.r * enemy.r ) );
 }
 
+// Находит Y-координату, где лазер встречает препятствие
+function find_laser_collision( enemies, ship ) {
+	const laserX = ship.cox + ship.w / 2;
+	let closestY = 0; // По умолчанию лазер идёт до верха экрана
+
+	for ( let i = 0; i < enemies.length; i++ ) {
+		const enemy = enemies[ i ];
+		if ( enemy && !enemy.isDead && !enemy.outside ) {
+			// Проверяем, попадает ли лазер в горизонтальные границы объекта
+			const distX = Math.abs( enemy.coxArc - laserX );
+
+			if ( distX <= enemy.r ) {
+				// Лазер пересекает объект по X, проверяем Y
+				if ( enemy.coyArc < ship.coy && enemy.coyArc > closestY ) {
+					closestY = enemy.coyArc + enemy.r;
+				}
+			}
+		}
+	}
+
+	return closestY;
+}
+
+// Обрабатывает попадание лазера по объектам
+function process_laser_hits( enemies, ship, laser, damagePerTick ) {
+	const laserX = ship.cox + ship.w / 2;
+
+	for ( let i = 0; i < enemies.length; i++ ) {
+		const enemy = enemies[ i ];
+		if ( enemy && !enemy.isDead && !enemy.outside ) {
+			const distX = Math.abs( enemy.coxArc - laserX );
+
+			if ( distX <= enemy.r && enemy.coyArc < ship.coy ) {
+				// Лазер попадает в объект
+				enemy.damageTime += damagePerTick;
+
+				// Если урон достиг 2000мс (2 секунды), уничтожаем объект
+				if ( enemy.damageTime >= 2000 ) {
+					enemy.isDead = true;
+					draw_explosion( enemy.cox, enemy.coy );
+				}
+			}
+		}
+	}
+}
+
+// Сбрасывает счётчики урона у всех объектов
+function reset_damage_timers( objects ) {
+	objects.forEach( obj => {
+		if ( obj && !obj.isDead ) {
+			obj.damageTime = 0;
+		}
+	} );
+}
+
 function update_rect() {
-	ctx.fillStyle = '#000'; // устанавливаем цвет заливки в черный
+	ctx.fillStyle = '#000';
 	ctx.clearRect( 0, 0, canvas.width, canvas.height );
 	ctx.fillRect( 0, 0, canvas.width, canvas.height );
 }
@@ -370,11 +458,6 @@ function draw_pause() {
 	} );
 }
 
-/**
- * Положить значение в common
- * @param {string} key
- * @param {*} value
- */
 function update_storage( key, value ) {
 	chrome.storage.local.set( { [ key ] : value } );
 }
