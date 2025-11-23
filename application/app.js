@@ -67,10 +67,15 @@ if ( canvas.getContext ) {
 
 	const highDiffIntervalId = setInterval( () => {
 		DIFFICULT_PARAM.DIFFICULT += 1;
-	}, 20000 );
+	}, 30000 );
 
 	const mainIntervalId = setInterval( () => {
 		if ( !isGameStop ) {
+			// Проверка на победу
+			if ( scoreCount.count >= 1000 ) {
+				win_game();
+			}
+
 			if ( check_collision_arc_rect( enemies, ship ) ) {
 				draw_explosion( collisionObject.cox, collisionObject.coy );
 				if ( healthCount.count !== 1 ) {
@@ -181,6 +186,23 @@ if ( canvas.getContext ) {
 				clearInterval( mainIntervalId );
 				game_over();
 			}, 1500 );
+		}
+	}
+
+	const win_game = () => {
+		if ( !isGameStop ) {
+			isGameStop = true;
+			pressedKeys.left = false;
+			pressedKeys.right = false;
+			update_rect();
+			clearInterval( enemyRespIntervalId );
+			clearInterval( highDiffIntervalId );
+			clearInterval( healthyRespIntervalId );
+
+			setTimeout( () => {
+				clearInterval( mainIntervalId );
+				game_win();
+			}, 500 );
 		}
 	}
 
@@ -315,8 +337,22 @@ function update_rect() {
 function game_over() {
 	window.requestAnimationFrame( () => {
 		ctx.beginPath();
+		ctx.fillStyle = '#FF4444';
 		ctx.font = '45px fantasy';
 		ctx.fillText( 'GAME OVER', 170, 230 );
+		ctx.fill();
+		ctx.closePath();
+	} );
+}
+
+function game_win() {
+	window.requestAnimationFrame( () => {
+		ctx.beginPath();
+		ctx.fillStyle = '#00FF88';
+		ctx.font = '50px fantasy';
+		ctx.fillText( 'YOU WIN!', 170, 200 );
+		ctx.font = '30px fantasy';
+		ctx.fillText( 'Congratulations!', 150, 250 );
 		ctx.fill();
 		ctx.closePath();
 	} );
