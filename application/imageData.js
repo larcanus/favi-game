@@ -326,42 +326,74 @@ const imageDataObjects = {
 		class Meteor {
 			constructor( ctx, cox, coy ) {
 				this.image = new Image();
-				this.image.src = `/images/meteor_1.png`;
+				this.image.src = `/images/meteor.png`;
+				this.imageLoaded = false;
+				this.image.onload = () => {
+					this.imageLoaded = true;
+				};
+
+				this.image.onerror = () => {
+					console.warn('Failed to load meteor image');
+				};
+
 				this.sh = 60;
 				this.sw = 60;
 				this.dh = 60;
 				this.dw = 60;
-				this.cox = 10 + cox;
-				this.coy = 10 + coy;
-				this.coxArc = 40 + cox;
-				this.coyArc = 40 + coy;
+
+				this.cox = cox;
+				this.coy = coy;
+
+				this.centerX = cox + this.dw / 2;
+				this.centerY = coy + this.dh / 2;
+				this.coxArc = this.centerX;
+				this.coyArc = this.centerY;
+
 				this.ctx = ctx;
 				this.dx = 0;
 				this.dy = DIFFICULT_PARAM.DIFFICULT / 4;
-				this.r = 25;
+				this.r = 30;
 				this.isDead = false;
 				this.outside = false;
 				this.damageTime = 0;
+
+				this.rotation = Math.random() * Math.PI * 2;
+				this.rotationSpeed = (Math.random() - 0.6) * 0.1;
 			}
 
 			draw_meteor() {
-				if ( this.coy > -20 && this.coy < 800 && !this.isDead ) {
-					this.ctx.beginPath();
+				if ( this.coy > -20 && this.coy < 800 && !this.isDead && this.imageLoaded ) {
+					this.ctx.save();
+					this.ctx.translate( this.centerX, this.centerY );
+					this.ctx.rotate( this.rotation );
 
-					this.ctx.arc( this.coxArc, this.coyArc, this.r, 0, Math.PI * 2, true );
+					this.ctx.drawImage(
+						this.image,
+						0, 0,
+						this.sh, this.sw,
+						-this.dw / 2, -this.dh / 2,
+						this.dh, this.dw
+					);
 
-					this.ctx.drawImage( this.image, 0, 0, this.sh, this.sw, this.cox, this.coy, this.dh, this.dw );
+					this.ctx.restore();
 
 					if ( this.damageTime > 0 ) {
 						const damagePercent = this.damageTime / 2000;
 						this.ctx.strokeStyle = '#FF0000';
 						this.ctx.lineWidth = 3;
 						this.ctx.beginPath();
-						this.ctx.arc( this.coxArc, this.coyArc, this.r + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * damagePercent, false );
+						this.ctx.arc(
+							this.coxArc,
+							this.coyArc,
+							this.r + 5,
+							-Math.PI / 2,
+							-Math.PI / 2 + Math.PI * 2 * damagePercent,
+							false
+						);
 						this.ctx.stroke();
 					}
 
-					this.ctx.closePath();
+					this.rotation += this.rotationSpeed;
 					this.outside = false;
 				}
 
@@ -370,7 +402,11 @@ const imageDataObjects = {
 				}
 
 				this.coy += this.dy;
-				this.coyArc += this.dy;
+				this.cox += this.dx;
+				this.centerX += this.dx;
+				this.centerY += this.dy;
+				this.coxArc = this.centerX;
+				this.coyArc = this.centerY;
 			}
 		}
 
